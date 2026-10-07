@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    container_name: worldradio
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:8080:80"      # only reachable from the VPS itself; host nginx handles the public side
+
+  api:
+    build: ./api
+    container_name: worldradio-api
+    restart: unless-stopped
+    environment:
+      - DEAD_DAYS=3              # how long a confirmed-dead station stays hidden before being re-checked
+      - DEAD_MIN_REPORTS=1       # distinct visitors who must report it (the server also tests the stream itself)
+    volumes:
+      - worldradio-data:/data    # keeps the shared dead-station list across restarts
+    # no published ports: only the web container can reach it
+
+volumes:
+  worldradio-data:
